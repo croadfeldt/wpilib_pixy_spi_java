@@ -102,13 +102,6 @@ public class Robot extends IterativeRobot {
 		Scheduler.getInstance().run();
 		
 		vision.testPixy1();
-	      
-        try{
-        	SmartDashboard.putString("Packet 1 x is ", vision.packet1[0].X + "!");
-        } catch (NullPointerException e) {
-        	SmartDashboard.putString("Packet 1 x is ", "null");
-        }
-         
 	}
 
 	/**

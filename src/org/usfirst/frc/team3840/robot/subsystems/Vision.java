@@ -1,52 +1,63 @@
 package org.usfirst.frc.team3840.robot.subsystems;
 
 import edu.wpi.first.wpilibj.command.Subsystem;
-import edu.wpi.first.wpilibj.I2C;
-import edu.wpi.first.wpilibj.I2C.Port;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+
+import edu.wpi.first.wpilibj.SPI;
+import edu.wpi.first.wpilibj.SPI.Port;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
 
 public class Vision extends Subsystem {
 
-	
-	public PixyI2C pixy1;
-	
-	Port port = Port.kOnboard;
+
+	// These values are the default if you instantiate a PixySPI without arguments.
+	// To create multiple PixySPI objects and thus use multiple Pixy cameras via SPI
+	// Copy the items below, change variable names as needed and especially change
+	// the SPI port used eg; Port.kOnboardCS[0-3] or Port.kMXP
+	public PixySPI pixy1;
+	Port port = Port.kOnboardCS0;
 	String print;
-	public PixyPacket[] packet1 = new PixyPacket[7];
-	public PixyPacket[] packet2 = new PixyPacket[7];
-	
+	public HashMap<Integer, ArrayList<PixyPacket>> packets = new HashMap<Integer, ArrayList<PixyPacket>>();
+
 	public Vision(){
-		pixy1 = new PixyI2C(new I2C(port, 0x54), packet1, new PixyException(print), new PixyPacket());
+		// Open a pipeline to a Pixy camera.
+		pixy1 = new PixySPI(new SPI(port), packets, new PixyException(print));
 	}
 
-	
+
 	public void initDefaultCommand() {
 		// Set the default command for a subsystem here.
 		// setDefaultCommand(new MySpecialCommand());
 	}
-	
+
 	public void testPixy1(){
-		for(int i = 0; i < packet1.length; i++)
-			packet1[i] = null;
-		SmartDashboard.putString("Pixy1 hello", "working");
-		for(int i = 1; i < 8; i++) {   		
-			try {
-				packet1[i - 1] = pixy1.readPacket(i);
-			} catch (PixyException e) {
-				SmartDashboard.putString("Pixy1 Error: " + i, "exception");
+		int ret = -1;
+		// Get the packets from the pixy.
+		try {
+			ret = pixy1.readPackets();
+		} catch (PixyException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		SmartDashboard.putNumber("Pixy Vision: packets size: ", packets.size());
+
+		for(int i = 1; i <= PixySPI.PIXY_SIG_COUNT ; i++) {
+			SmartDashboard.putString("Pixy Vision: Signature: ", Integer.toString(i));
+
+			SmartDashboard.putNumber("Pixy Vision: packet: " + Integer.toString(i) + ": size: ", packets.get(i).size());
+			
+			// Loop through the packets for this signature.
+			for(int j=0; j < packets.get(i).size(); j++) {
+				SmartDashboard.putNumber("Pixy Vision: " + Integer.toString(i) + ": X: ", packets.get(i).get(j).X);
+				SmartDashboard.putNumber("Pixy Vision: " + Integer.toString(i) + ": Y: ", packets.get(i).get(j).Y);
+				SmartDashboard.putNumber("Pixy Vision: " + Integer.toString(i) + ": Width: ", packets.get(i).get(j).Width);
+				SmartDashboard.putNumber("Pixy Vision: " + Integer.toString(i) + ": Height: ", packets.get(i).get(j).Height);
 			}
-			if(packet1[i - 1] == null){
-				SmartDashboard.putString("Pixy1 Error: " + i, "True");
-				continue;
-			}
-			SmartDashboard.putNumber("Pixy1 X Value: " + i, packet1[i - 1].X);
-			SmartDashboard.putNumber("Pixy1 Y Value: " + i, packet1[i - 1].Y);
-			SmartDashboard.putNumber("Pixy1 Width Value: " + i, packet1[i - 1].Width);
-			SmartDashboard.putNumber("Pixy1 Height Value: " + i, packet1[i - 1].Height);
-			SmartDashboard.putString("Pixy1 Error: " + i, "False");
 		}
 	}
-
 }
 
