@@ -21,12 +21,14 @@ Code is of course GNU v2 licensed. License files incoming per gnu licensing guid
 To connect the pixy to your RoboRio, follow the pinout below.
 
 MISO - pixy 1 - rio spi 7
+
 SCK  -  pixy 3 - rio spi 3
+
 MOSI - pixy 4 - rio spi 5
+
 SS     - pixy 7 - rio spi 2
+
 GND  - pixy 6 | 8 | 10 - rio spi 1
-
-
 
 GND, not required but advised to use it, on the Pixy can be anyone of the pins shown, I normally use pixy 6 to keep the wires close. SS is not required, but put it in for future use. MISO, SCK and MOSI are required regardless.
 
