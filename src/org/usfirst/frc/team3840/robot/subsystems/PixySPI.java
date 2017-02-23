@@ -228,18 +228,22 @@ public class PixySPI {
 		// Flip the writeBuf so it's ready to be read.
 		writeBuf.flip();
 
-		// Store the value of the buffer to a string for debugging and if(debug >= 1) {SmartDashboard.
-		writeString = bbToString(writeBuf);
+		// Store the value of the buffer to a string for debugging to the console/log and SmartDashboard.
+		if(debug >= 1) {
+			writeString = bbToString(writeBuf);
+			SmartDashboard.putString("Pixy: getWord: write sync: ", writeString);
+		}
 		if(debug >= 2) {logger.log(Level.INFO, "Pixy: getWord: write sync: {0}", writeString);}
-		if(debug >= 1) {SmartDashboard.putString("Pixy: getWord: write sync: ", writeString);}
 
 		// Send the sync / data bit / 0 to get the Pixy to return data appropriately.
 		ret = pixy.transaction(writeBuf, readBuf, 2);
 
-		// Store the complete returned data in a string for debugging and if(debug >= 1) {SmartDashboard.
-		readString = bbToString(readBuf);
+		//Store the value of the buffer to a string for debugging to the console/log and SmartDashboard
+		if(debug >= 1) {
+			readString = bbToString(readBuf);
+			SmartDashboard.putString("Pixy: getWord: read sync: ", readString);
+		}
 		if(debug >= 2) {logger.log(Level.INFO, "Pixy: getWord: read sync: {0}", readString);}
-		if(debug >= 1) {SmartDashboard.putString("Pixy: getWord: read sync: ", readString);}
 
 		// Set the position back to 0 in the buffer so we read it from the beginning next time.
 		readBuf.rewind();
@@ -269,11 +273,14 @@ public class PixySPI {
 
 		if(debug >= 1) {SmartDashboard.putNumber("getStart: count: ", getStart++);}
 
+		// Loop until we get a start word from the Pixy.
 		while(true) {
 			int w = getWord();
 			if(debug >= 2) {logger.log(Level.INFO, "Pixy: getStart: w: {0}", Integer.toHexString(w));}
-			if(debug >= 1) {SmartDashboard.putString("Pixy: getStart: w", Integer.toHexString(w));}
-			if(debug >= 1) {SmartDashboard.putNumber("getStart: loop count: ", count++);}
+			if(debug >= 1) {
+				SmartDashboard.putString("Pixy: getStart: w", Integer.toHexString(w));
+				SmartDashboard.putNumber("getStart: loop count: ", count++);
+			}
 			if ((w == 0x00) && (lastw == 0x00)) {
 				// Could delay a bit to give time for next data block, but to get accurate time would tie up cpu.
 				// So might as well return and let caller call this getStart again.
@@ -304,6 +311,7 @@ public class PixySPI {
 		return new String(hexChars);
 	}
 
+	// This doesn't work yet. At least that's what I recall.
 	public static String intsToHex(int[] ints) {
 		String hexString = new String();
 		for ( int j = 0; j < ints.length; j++ ) {
@@ -312,6 +320,11 @@ public class PixySPI {
 		return new String(hexString);
 	}
 
+	// Use this in readPackets, it's there commented out already.
+	// Read the warning there as well.
+	// This will dump all data to the console/log and SmartDashboard
+	// Set the debug level accordingly, otherwise it's going to be a bit boring
+	// watching nothing happen while your RoboRio is screaming into the void.
 	public void rawComms() {
 		//logger.entering(getClass().getName(), "doIt");
 		int word = 0x00;
@@ -342,6 +355,8 @@ public class PixySPI {
 		}
 	}
 
+	// Not sure why I have this here. Will pull it later.
+	// It's late and I'm going to bed.
 	public String bbToString(ByteBuffer bb) {
 		final byte[] b = new byte[bb.remaining()];
 		bb.duplicate().get(b);
