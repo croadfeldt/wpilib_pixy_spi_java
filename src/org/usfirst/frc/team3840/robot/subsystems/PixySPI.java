@@ -155,8 +155,8 @@ public class PixySPI {
 				return(blocks.size());
 			}
 
-			// Start building the next block which will be store in the overall set of blocks.
-			// Only need 6 slots since the first 2 slots have been consumed already, for the start/sync and checksum..
+			// Start building the next block which will be stored in the overall set of blocks.
+			// Only need 5 slots since the first 3 slots have been retrieved already, for the double start blocks and checksum.
 			int[] block = new int[5];
 			for(int i=0; i<BLOCK_LEN; i++) {
 				block[i] = getWord();
@@ -171,7 +171,7 @@ public class PixySPI {
 			if(debug >= 1) {SmartDashboard.putString("Pixy: getBlocks trialsum: ", Integer.toHexString(trialsum));}
 
 			if(checksum == trialsum) {
-				// Good to add the current block of data to the overall blocks buffer.
+				// Data has been validated, add the current block of data to the overall blocks buffer.
 				blocks.add(block);
 				if(debug >= 2) {logger.log(Level.INFO, "Pixy: getBlocks Checksum: {0}", "passed");}
 				if(debug >= 1) {SmartDashboard.putString("Pixy: getBlocks Checksum", "passed");}
@@ -181,6 +181,9 @@ public class PixySPI {
 				if(debug >= 1) {SmartDashboard.putString("Pixy: getBlocks Checksum", "failed");}
 			}
 
+			// Check the next word from the Pixy to confirm it's the start of the next block.
+			// Pixy sends two aa55 words at start of block, this should pull the first one.
+			// The top of the loop should pull the other one.
 			int w = getWord();
 
 			if(debug >= 1) {SmartDashboard.putString("Pixy: getBlocks: w: ", (Integer.toHexString(w)));}
@@ -193,7 +196,9 @@ public class PixySPI {
 		}
 
 		//logger.exiting(getClass().getName(), "doIt");
-		// Should never get here, but putting in this bogus return to keep eclipse happy.
+		// Should never get here, but if we happen to get a massive number of blocks
+		// and exceed the limit it will happen. In that case something is wrong
+		// or you have a super natural Pixy and SPI link.
 		return(0);
 	}
 
