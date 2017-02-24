@@ -31,16 +31,15 @@ public class PixySPI {
 	static final int PIXY_START_WORDX = 0x55aa;
 	static final int BLOCK_LEN = 5;
 	static final int PIXY_SIG_COUNT = 7;
-	private ArrayDeque<Byte> outBuf = new ArrayDeque<>();
+	private ArrayDeque<Byte> outBuf = new ArrayDeque<>(); // Future use for sending commands to Pixy.
 	private ArrayList<int[]> blocks = new ArrayList<int[]>();
 	private boolean skipStart = false;
-	private int debug = 0; // 0 - none, 1 - if(debug >= 1) {SmartDashboard, 2 - log to console/file 
+	private int debug = 0; // 0 - none, 1 - SmartDashboard, 2 - log to console/file 
 
 	private static final Logger logger =
 			Logger.getLogger(PixySPI.class.getName());
 
 	long getWord = 0;
-	long getByte = 0;
 	long getStart = 0;
 	long getBlock = 0;
 	long readPackets = 0;
@@ -60,11 +59,10 @@ public class PixySPI {
 
 	//This method gathers data, then parses that data, and assigns the ints to global variables
 	public int readPackets() throws PixyException { //The signature should be which number object in 
-		//logger.entering(getClass().getName(), "doIt");
 		if(debug >= 1) {SmartDashboard.putNumber("readPackets: count: ", readPackets++);}
 
 		// Uncomment this to see just the raw output from the Pixy. You will need to restart the robot code
-		// to kill this object.
+		// to kill this.
 		//rawComms();
 
 		int numBlocks = getBlocks(1000);
@@ -76,7 +74,7 @@ public class PixySPI {
 			packets.put(i, new ArrayList<PixyPacket>());
 		}
 
-		// Put the found blocks into the correct spot in the return ArrayList.
+		// Put the found blocks into the correct spot in the return Hashmap<ArrayList<int[]>>.
 		if(numBlocks > 0) {
 			if(debug >= 2) {logger.log(Level.INFO, "Pixy readPackets: blocks detected: {0}", Integer.toString(numBlocks));}
 			if(debug >= 1) {SmartDashboard.putString("Pixy readPackets: blocks detected: ", Integer.toString(numBlocks));}
@@ -107,12 +105,10 @@ public class PixySPI {
 			}
 		}
 
-		//logger.exiting(getClass().getName(), "doIt");
 		return(1);
 	}
 
 	private int getBlocks(int maxBlocks) {
-		//logger.entering(getClass().getName(), "doIt");
 		// Clear out blocks array list for reuse.
 		blocks.clear();
 		long count = 0;
@@ -155,12 +151,15 @@ public class PixySPI {
 				return(blocks.size());
 			}
 
-			// Start building the next block which will be stored in the overall set of blocks.
-			// Only need 5 slots since the first 3 slots have been retrieved already, for the double start blocks and checksum.
+			// Start building the block which will be stored in the overall set of blocks.
+			// Only need 5 slots since the first 3 slots, the double start blocks and checksum, have been retrieved already.
 			int[] block = new int[5];
 			for(int i=0; i<BLOCK_LEN; i++) {
 				block[i] = getWord();
 				trialsum += block[i];
+				// intsToHex doesn't work yet. Unable to test and fix at the moment.
+				// It will show up in the log and SmartDashboard with no data.
+				// That does NOT inherently mean anything is wrong with core code.
 				if(debug >= 2) {logger.log(Level.INFO, "Pixy: getBlocks: block: {0}", intsToHex(block));}
 				if(debug >= 1) {SmartDashboard.putString("Pixy: getBlocks: block", intsToHex(block));}
 			}
@@ -170,6 +169,7 @@ public class PixySPI {
 			if(debug >= 2) {logger.log(Level.INFO, "Pixy: getBlocks trialsum: {0}", Integer.toHexString(trialsum));}
 			if(debug >= 1) {SmartDashboard.putString("Pixy: getBlocks trialsum: ", Integer.toHexString(trialsum));}
 
+			// See if we received the data correctly.
 			if(checksum == trialsum) {
 				// Data has been validated, add the current block of data to the overall blocks buffer.
 				blocks.add(block);
@@ -195,7 +195,6 @@ public class PixySPI {
 			}
 		}
 
-		//logger.exiting(getClass().getName(), "doIt");
 		// Should never get here, but if we happen to get a massive number of blocks
 		// and exceed the limit it will happen. In that case something is wrong
 		// or you have a super natural Pixy and SPI link.
@@ -204,7 +203,6 @@ public class PixySPI {
 
 	// Pixy SPI comm functions derived from https://github.com/omwah/pixy_rpi
 	private int getWord() {
-		//logger.entering(getClass().getName(), "doIt");
 		int word = 0x00;
 		int ret = -1;
 		ByteBuffer buf = ByteBuffer.allocate(2);
@@ -253,8 +251,6 @@ public class PixySPI {
 
 		if(debug >= 1) {SmartDashboard.putString("Pixy: getWord: word: ", Integer.toHexString(word));}
 
-		//logger.exiting(getClass().getName(), "doIt");
-
 		// Clear the buffers, not needed, but nice to know they are cleaned out.
 		writeBuf.clear();
 		readBuf.clear();
@@ -267,7 +263,6 @@ public class PixySPI {
 	}
 
 	private boolean getStart() {
-		//logger.entering(getClass().getName(), "doIt");
 		int lastw = 0xff;
 		int count=0;
 
@@ -320,14 +315,13 @@ public class PixySPI {
 		return new String(hexString);
 	}
 
-	// Use this in readPackets, it's there commented out already.
+	// Call this from readPackets, it's there commented out already.
 	// Read the warning there as well.
 	// This will dump all data to the console/log and SmartDashboard
 	// Set the debug level accordingly, otherwise it's going to be a bit boring
 	// watching nothing happen while your RoboRio is screaming into the void.
 	public void rawComms() {
 		//logger.entering(getClass().getName(), "doIt");
-		int word = 0x00;
 		int ret = -1;
 		ByteBuffer buf = ByteBuffer.allocate(2);
 		buf.order(ByteOrder.BIG_ENDIAN);
@@ -355,8 +349,6 @@ public class PixySPI {
 		}
 	}
 
-	// Not sure why I have this here. Will pull it later.
-	// It's late and I'm going to bed.
 	public String bbToString(ByteBuffer bb) {
 		final byte[] b = new byte[bb.remaining()];
 		bb.duplicate().get(b);
