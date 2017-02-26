@@ -50,10 +50,10 @@ public class PixySPI {
 		pExc = argPixyException;
 
 		// Set some SPI parameters.
-		pixy.setLSBFirst();
+		pixy.setMSBFirst();
 		pixy.setChipSelectActiveLow();
 		pixy.setClockRate(1000);
-		pixy.setSampleDataOnRising();
+		pixy.setSampleDataOnFalling();
 		pixy.setClockActiveLow();
 	}
 
@@ -205,8 +205,6 @@ public class PixySPI {
 	private int getWord() {
 		int word = 0x00;
 		int ret = -1;
-		ByteBuffer buf = ByteBuffer.allocate(2);
-		buf.order(ByteOrder.BIG_ENDIAN);
 		ByteBuffer writeBuf = ByteBuffer.allocateDirect(2);
 		writeBuf.order(ByteOrder.BIG_ENDIAN);
 		ByteBuffer readBuf = ByteBuffer.allocateDirect(2);
