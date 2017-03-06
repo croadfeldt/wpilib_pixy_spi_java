@@ -16,7 +16,7 @@ https://github.com/omwah/pixy_rpi
 
 https://github.com/charmedlabs/pixy
 
-and one more that I can't find at the moment, it's late, will give credit when I'm more fully coherent.
+https://github.com/BHSRobotix/Steamworks2017
 
 Code is of course GNU v2 licensed. License files incoming per gnu licensing guidelines.
 
